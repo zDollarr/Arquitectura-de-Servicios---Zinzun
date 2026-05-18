@@ -108,7 +108,7 @@ db.runCommand({
   validator: {
     $jsonSchema: {
       bsonType: "object",
-      required: ["idAlumno", "idEvento", "fechaInscripcion"],
+      required: ["idAlumno", "idEvento", "fechaInscripcion", "asistencia"],
       properties: {
         idAlumno: { bsonType: "objectId" },
         idEvento: { bsonType: "objectId" },
