@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 from app.routes.carrera_routes import router as carrera_router
+from app.routes.alumno_routes import router as alumno_router
+from app.routes.grupo_routes import router as grupo_router
+from app.db.mongo import get_database
+from app.services.carrera_service import CarreraService
 
 from app.routes.actividad_routes import router as actividad_router
 
