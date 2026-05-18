@@ -1,0 +1,18 @@
+[
+  {
+    "_id": { "$oid": "665f20000000000000000001" },
+    "nombre": "8B",
+    "idCarrera": { "$oid": "665f10000000000000000001" },
+    "semestre": 8,
+    "estatus": true,
+    "fechaCreacion": { "$date": "2026-05-17T10:10:00Z" }
+  },
+  {
+    "_id": { "$oid": "665f20000000000000000002" },
+    "nombre": "6A",
+    "idCarrera": { "$oid": "665f10000000000000000002" },
+    "semestre": 6,
+    "estatus": true,
+    "fechaCreacion": { "$date": "2026-05-17T10:15:00Z" }
+  }
+]

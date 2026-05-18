@@ -1,0 +1,30 @@
+[
+  {
+    "_id": { "$oid": "665f30000000000000000001" },
+    "nombre": "Fernando Santos Gomez",
+    "email": "fernando@example.com",
+    "password": "123456",
+    "numeroControl": "21870123",
+    "rol": "alumno",
+    "tipo": "regular",
+    "estatus": true,
+    "semestre": 8,
+    "idCarrera": { "$oid": "665f10000000000000000001" },
+    "idGrupo": { "$oid": "665f20000000000000000001" },
+    "fechaCreacion": { "$date": "2026-05-17T10:20:00Z" }
+  },
+  {
+    "_id": { "$oid": "665f30000000000000000002" },
+    "nombre": "Ana Lopez Martinez",
+    "email": "ana@example.com",
+    "password": "abcdef",
+    "numeroControl": "21870124",
+    "rol": "alumno",
+    "tipo": "regular",
+    "estatus": true,
+    "semestre": 8,
+    "idCarrera": { "$oid": "665f10000000000000000001" },
+    "idGrupo": { "$oid": "665f20000000000000000001" },
+    "fechaCreacion": { "$date": "2026-05-17T10:25:00Z" }
+  }
+]

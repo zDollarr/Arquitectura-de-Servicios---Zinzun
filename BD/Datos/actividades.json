@@ -1,0 +1,18 @@
+[
+  {
+    "_id": { "$oid": "665f50000000000000000001" },
+    "nombre": "Registro de participantes",
+    "descripcion": "Actividad inicial para registrar a los asistentes del hackathon.",
+    "idEvento": { "$oid": "665f40000000000000000001" },
+    "fecha": { "$date": "2026-06-10T08:00:00Z" },
+    "estatus": true
+  },
+  {
+    "_id": { "$oid": "665f50000000000000000002" },
+    "nombre": "Ponencia sobre MongoDB",
+    "descripcion": "Sesion introductoria sobre bases de datos no relacionales.",
+    "idEvento": { "$oid": "665f40000000000000000002" },
+    "fecha": { "$date": "2026-06-15T11:30:00Z" },
+    "estatus": true
+  }
+]

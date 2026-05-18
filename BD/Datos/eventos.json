@@ -1,0 +1,24 @@
+[
+  {
+    "_id": { "$oid": "665f40000000000000000001" },
+    "nombre": "Hackathon ITESZ 2026",
+    "fechaInicio": { "$date": "2026-06-10T09:00:00Z" },
+    "capacidadMaxima": 100,
+    "inscritos": 2,
+    "estatus": "activo",
+    "descripcion": "Evento academico de desarrollo de software e innovacion.",
+    "tipo": "hackathon",
+    "fechaRegistro": { "$date": "2026-05-17T10:30:00Z" }
+  },
+  {
+    "_id": { "$oid": "665f40000000000000000002" },
+    "nombre": "Conferencia de Bases de Datos",
+    "fechaInicio": { "$date": "2026-06-15T11:00:00Z" },
+    "capacidadMaxima": 80,
+    "inscritos": 1,
+    "estatus": "activo",
+    "descripcion": "Conferencia sobre modelado y administracion de bases de datos.",
+    "tipo": "conferencia",
+    "fechaRegistro": { "$date": "2026-05-17T10:35:00Z" }
+  }
+]

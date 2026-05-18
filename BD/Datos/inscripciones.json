@@ -1,0 +1,23 @@
+[
+  {
+    "_id": { "$oid": "665f60000000000000000001" },
+    "idAlumno": { "$oid": "665f30000000000000000001" },
+    "idEvento": { "$oid": "665f40000000000000000001" },
+    "fechaInscripcion": { "$date": "2026-05-18T09:00:00Z" },
+    "asistencia": false
+  },
+  {
+    "_id": { "$oid": "665f60000000000000000002" },
+    "idAlumno": { "$oid": "665f30000000000000000002" },
+    "idEvento": { "$oid": "665f40000000000000000001" },
+    "fechaInscripcion": { "$date": "2026-05-18T09:10:00Z" },
+    "asistencia": false
+  },
+  {
+    "_id": { "$oid": "665f60000000000000000003" },
+    "idAlumno": { "$oid": "665f30000000000000000001" },
+    "idEvento": { "$oid": "665f40000000000000000002" },
+    "fechaInscripcion": { "$date": "2026-05-18T09:20:00Z" },
+    "asistencia": false
+  }
+]

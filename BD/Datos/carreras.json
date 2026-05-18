@@ -1,0 +1,14 @@
+[
+  {
+    "_id": { "$oid": "665f10000000000000000001" },
+    "nombre": "Ingenieria en Sistemas Computacionales",
+    "estatus": true,
+    "fechaCreacion": { "$date": "2026-05-17T10:00:00Z" }
+  },
+  {
+    "_id": { "$oid": "665f10000000000000000002" },
+    "nombre": "Ingenieria Industrial",
+    "estatus": true,
+    "fechaCreacion": { "$date": "2026-05-17T10:05:00Z" }
+  }
+]
