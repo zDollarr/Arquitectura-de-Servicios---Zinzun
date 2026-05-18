@@ -1,4 +1,4 @@
-use gestion_eventos_db;
+db = db.getSiblingDB("gestion_eventos_db");
 
 // Vista: alumnos con datos de carrera y grupo
 db.createView("vista_alumnos_completo", "alumnos", [
@@ -80,6 +80,36 @@ db.createView("vista_eventos_con_actividades", "eventos", [
   {
     $project: {
       actividades: 0
+    }
+  }
+]);
+
+db.createView("vista_carreras_con_grupos", "carreras", [
+  {
+    $lookup: {
+      from: "grupos",
+      localField: "_id",
+      foreignField: "idCarrera",
+      as: "grupos"
+    }
+  },
+  {
+    $addFields: {
+      totalGrupos: { $size: "$grupos" }
+    }
+  },
+  {
+    $project: {
+      nombre: 1,
+      estatus: 1,
+      fechaCreacion: 1,
+      totalGrupos: 1,
+      grupos: {
+        _id: 1,
+        nombre: 1,
+        semestre: 1,
+        estatus: 1
+      }
     }
   }
 ]);

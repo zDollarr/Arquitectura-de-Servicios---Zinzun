@@ -1,10 +1,21 @@
-use gestion_eventos_db;
+db = db.getSiblingDB("gestion_eventos_db");
 
-db.createCollection("alumnos");
-db.createCollection("carreras");
-db.createCollection("grupos");
-db.createCollection("eventos");
-db.createCollection("actividades");
-db.createCollection("inscripciones");
+const colecciones = [
+  "alumnos",
+  "carreras",
+  "grupos",
+  "eventos",
+  "actividades",
+  "inscripciones"
+];
 
-print("Colecciones creadas correctamente");
+colecciones.forEach((nombre) => {
+  if (!db.getCollectionNames().includes(nombre)) {
+    db.createCollection(nombre);
+    print("Colección creada: " + nombre);
+  } else {
+    print("La colección ya existe: " + nombre);
+  }
+});
+
+print("Colecciones revisadas correctamente");

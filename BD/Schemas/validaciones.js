@@ -1,5 +1,4 @@
-use gestion_eventos_db;
-
+db = db.getSiblingDB("gestion_eventos_db");
 // Validación para alumnos
 db.runCommand({
   collMod: "alumnos",
