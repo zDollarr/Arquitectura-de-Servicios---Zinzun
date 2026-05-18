@@ -1,11 +1,14 @@
 from fastapi import FastAPI
 from app.routes.carrera_routes import router as carrera_router
+from app.routes.actividad_routes import router as actividad_router
 
 app = FastAPI(
     title="API Gestión de Eventos y Actividades",
     version="1.0.0"
 )
 
+
+app.include_router(actividad_router)
 app.include_router(carrera_router)
 
 
