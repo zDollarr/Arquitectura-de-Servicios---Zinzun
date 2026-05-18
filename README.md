@@ -32,8 +32,6 @@ Este repositorio concentra los componentes principales del proyecto, organizados
 - MongoDB
 - API REST
 
-```
-
 ## Contenido de las carpetas
 
 ### Documentacion
