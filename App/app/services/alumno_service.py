@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Optional
 
 from bson import ObjectId
 from fastapi import HTTPException, status
-from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.models.alumno_model import (
     AlumnoBaseOut,
@@ -58,19 +57,19 @@ def _serialize_alumno(document: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-async def create_alumno(db: AsyncIOMotorDatabase, payload: AlumnoCreate) -> AlumnoCreateResponse:
+def create_alumno(db, payload: AlumnoCreate) -> AlumnoCreateResponse:
     alumnos = db[ALUMNOS_COLLECTION]
     carreras = db[CARRERAS_COLLECTION]
     grupos = db[GRUPOS_COLLECTION]
 
-    existing_email = await alumnos.find_one({"email": payload.email.strip().lower()})
+    existing_email = alumnos.find_one({"email": payload.email.strip().lower()})
     if existing_email:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Ya existe un alumno registrado con ese email.",
         )
 
-    existing_numero_control = await alumnos.find_one({"numeroControl": payload.numeroControl.strip()})
+    existing_numero_control = alumnos.find_one({"numeroControl": payload.numeroControl.strip()})
     if existing_numero_control:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -80,14 +79,14 @@ async def create_alumno(db: AsyncIOMotorDatabase, payload: AlumnoCreate) -> Alum
     carrera_id = _validate_object_id(payload.idCarrera, "idCarrera")
     grupo_id = _validate_object_id(payload.idGrupo, "idGrupo")
 
-    carrera = await carreras.find_one({"_id": carrera_id})
+    carrera = carreras.find_one({"_id": carrera_id})
     if not carrera:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="La carrera indicada no existe.",
         )
 
-    grupo = await grupos.find_one({"_id": grupo_id})
+    grupo = grupos.find_one({"_id": grupo_id})
     if not grupo:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -108,7 +107,7 @@ async def create_alumno(db: AsyncIOMotorDatabase, payload: AlumnoCreate) -> Alum
         "fechaCreacion": datetime.now(timezone.utc),
     }
 
-    result = await alumnos.insert_one(document)
+    result = alumnos.insert_one(document)
 
     return AlumnoCreateResponse(
         codigo=status.HTTP_201_CREATED,
@@ -117,10 +116,10 @@ async def create_alumno(db: AsyncIOMotorDatabase, payload: AlumnoCreate) -> Alum
     )
 
 
-async def authenticate_alumno(db: AsyncIOMotorDatabase, credentials: AlumnoLogin) -> AlumnoLoginResponse:
+def authenticate_alumno(db, credentials: AlumnoLogin) -> AlumnoLoginResponse:
     alumnos = db[ALUMNOS_COLLECTION]
 
-    alumno = await alumnos.find_one({"email": credentials.email.strip().lower()})
+    alumno = alumnos.find_one({"email": credentials.email.strip().lower()})
     if not alumno:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -149,28 +148,34 @@ async def authenticate_alumno(db: AsyncIOMotorDatabase, credentials: AlumnoLogin
     )
 
 
-async def delete_alumno(db: AsyncIOMotorDatabase, id_alumno: str) -> None:
+def delete_alumno(db, id_alumno: str) -> OperacionResponse:
     alumnos = db[ALUMNOS_COLLECTION]
     alumno_id = _validate_object_id(id_alumno, "idAlumno")
 
-    result = await alumnos.delete_one({"_id": alumno_id})
+    result = alumnos.delete_one({"_id": alumno_id})
+
     if result.deleted_count == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="El alumno indicado no existe.",
         )
 
-
-async def activate_alumno(db: AsyncIOMotorDatabase, id_alumno: str) -> OperacionResponse:
-    return await _update_alumno_status(db, id_alumno, True, "Alumno activado correctamente.")
-
-
-async def deactivate_alumno(db: AsyncIOMotorDatabase, id_alumno: str) -> OperacionResponse:
-    return await _update_alumno_status(db, id_alumno, False, "Alumno desactivado correctamente.")
+    return OperacionResponse(
+        codigo=status.HTTP_200_OK,
+        mensaje="Alumno eliminado correctamente."
+    )
 
 
-async def _update_alumno_status(
-    db: AsyncIOMotorDatabase,
+def activate_alumno(db, id_alumno: str) -> OperacionResponse:
+    return _update_alumno_status(db, id_alumno, True, "Alumno activado correctamente.")
+
+
+def deactivate_alumno(db, id_alumno: str) -> OperacionResponse:
+    return _update_alumno_status(db, id_alumno, False, "Alumno desactivado correctamente.")
+
+
+def _update_alumno_status(
+    db,
     id_alumno: str,
     new_status: bool,
     success_message: str,
@@ -178,7 +183,7 @@ async def _update_alumno_status(
     alumnos = db[ALUMNOS_COLLECTION]
     alumno_id = _validate_object_id(id_alumno, "idAlumno")
 
-    result = await alumnos.update_one({"_id": alumno_id}, {"$set": {"estatus": new_status}})
+    result = alumnos.update_one({"_id": alumno_id}, {"$set": {"estatus": new_status}})
     if result.matched_count == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -188,11 +193,11 @@ async def _update_alumno_status(
     return OperacionResponse(codigo=status.HTTP_200_OK, mensaje=success_message)
 
 
-async def get_alumno_by_id(db: AsyncIOMotorDatabase, id_alumno: str) -> AlumnoOut:
+def get_alumno_by_id(db, id_alumno: str) -> AlumnoOut:
     alumnos = db[ALUMNOS_COLLECTION]
     alumno_id = _validate_object_id(id_alumno, "idAlumno")
 
-    alumno = await alumnos.find_one({"_id": alumno_id})
+    alumno = alumnos.find_one({"_id": alumno_id})
     if not alumno:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -202,8 +207,8 @@ async def get_alumno_by_id(db: AsyncIOMotorDatabase, id_alumno: str) -> AlumnoOu
     return AlumnoOut(**_serialize_alumno(alumno))
 
 
-async def list_alumnos(
-    db: AsyncIOMotorDatabase,
+def list_alumnos(
+    db,
     estatus: Optional[bool] = None,
     id_carrera: Optional[str] = None,
     id_grupo: Optional[str] = None,
@@ -218,7 +223,7 @@ async def list_alumnos(
     if id_grupo is not None:
         query["idGrupo"] = _validate_object_id(id_grupo, "idGrupo")
 
-    documents = await alumnos.find(query).sort("fechaCreacion", -1).to_list(length=None)
+    documents = list(alumnos.find(query).sort("fechaCreacion", -1))
     serialized: List[AlumnoOut] = [AlumnoOut(**_serialize_alumno(doc)) for doc in documents]
 
     mensaje = "Consulta de alumnos realizada correctamente."

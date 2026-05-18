@@ -8,6 +8,9 @@ class CarreraService:
     def __init__(self, db):
         self.collection = db["carreras"]
 
+    def crear_indice_nombre(self):
+        self.collection.create_index("nombre", unique=True)
+
     def convertir_carrera(self, carrera):
         carrera["idCarrera"] = str(carrera["_id"])
         del carrera["_id"]
@@ -17,10 +20,7 @@ class CarreraService:
 
         return carrera
 
-    async def crear_indice_nombre(self):
-        await self.collection.create_index("nombre", unique=True)
-
-    async def crear_carrera(self, carrera: CarreraCreate):
+    def crear_carrera(self, carrera: CarreraCreate):
         try:
             nueva_carrera = {
                 "nombre": carrera.nombre,
@@ -28,7 +28,7 @@ class CarreraService:
                 "fechaCreacion": datetime.now()
             }
 
-            resultado = await self.collection.insert_one(nueva_carrera)
+            resultado = self.collection.insert_one(nueva_carrera)
 
             return {
                 "codigo": 200,
@@ -42,19 +42,13 @@ class CarreraService:
                 "mensaje": "Ya existe una carrera con ese nombre"
             }
 
-        except Exception as error:
-            return {
-                "codigo": 500,
-                "mensaje": f"Error al crear carrera: {str(error)}"
-            }
-
-    async def consultar_carreras(self, estatus: bool = None):
+    def consultar_carreras(self, estatus: bool = None):
         filtro = {}
 
         if estatus is not None:
             filtro["estatus"] = estatus
 
-        carreras = await self.collection.find(filtro).to_list(length=None)
+        carreras = list(self.collection.find(filtro))
         carreras = [self.convertir_carrera(carrera) for carrera in carreras]
 
         return {
@@ -63,31 +57,35 @@ class CarreraService:
             "carreras": carreras
         }
 
-    async def consultar_carrera_por_id(self, idCarrera: str):
+    def consultar_carrera_por_id(self, idCarrera: str):
         if not ObjectId.is_valid(idCarrera):
             return {
                 "codigo": 400,
                 "mensaje": "ID de carrera no válido"
             }
 
-        carrera = await self.collection.find_one({"_id": ObjectId(idCarrera)})
+        carrera = self.collection.find_one({"_id": ObjectId(idCarrera)})
 
         if carrera is None:
             return {
                 "codigo": 404,
-                "mensaje": "Carrera no encontrada"
+                "mensaje": "No existe esta carrera"
             }
 
         return self.convertir_carrera(carrera)
 
-    async def actualizar_carrera(self, idCarrera: str, carrera: CarreraUpdate):
+    def actualizar_carrera(self, idCarrera: str, carrera: CarreraUpdate):
         if not ObjectId.is_valid(idCarrera):
             return {
                 "codigo": 400,
                 "mensaje": "ID de carrera no válido"
             }
 
-        datos_actualizar = carrera.dict(exclude_unset=True)
+        datos_actualizar = (
+            carrera.model_dump(exclude_unset=True)
+            if hasattr(carrera, "model_dump")
+            else carrera.dict(exclude_unset=True)
+        )
 
         if not datos_actualizar:
             return {
@@ -96,7 +94,7 @@ class CarreraService:
             }
 
         try:
-            resultado = await self.collection.update_one(
+            resultado = self.collection.update_one(
                 {"_id": ObjectId(idCarrera)},
                 {"$set": datos_actualizar}
             )
@@ -104,7 +102,7 @@ class CarreraService:
             if resultado.matched_count == 0:
                 return {
                     "codigo": 404,
-                    "mensaje": "Carrera no encontrada"
+                    "mensaje": "No existe esta carrera"
                 }
 
             return {
@@ -118,26 +116,20 @@ class CarreraService:
                 "mensaje": "Ya existe una carrera con ese nombre"
             }
 
-        except Exception as error:
-            return {
-                "codigo": 500,
-                "mensaje": f"Error al actualizar carrera: {str(error)}"
-            }
+    def activar_carrera(self, idCarrera: str):
+        return self.cambiar_estatus(idCarrera, True)
 
-    async def activar_carrera(self, idCarrera: str):
-        return await self.cambiar_estatus(idCarrera, True)
+    def desactivar_carrera(self, idCarrera: str):
+        return self.cambiar_estatus(idCarrera, False)
 
-    async def desactivar_carrera(self, idCarrera: str):
-        return await self.cambiar_estatus(idCarrera, False)
-
-    async def cambiar_estatus(self, idCarrera: str, estatus: bool):
+    def cambiar_estatus(self, idCarrera: str, estatus: bool):
         if not ObjectId.is_valid(idCarrera):
             return {
                 "codigo": 400,
                 "mensaje": "ID de carrera no válido"
             }
 
-        resultado = await self.collection.update_one(
+        resultado = self.collection.update_one(
             {"_id": ObjectId(idCarrera)},
             {"$set": {"estatus": estatus}}
         )
@@ -145,7 +137,7 @@ class CarreraService:
         if resultado.matched_count == 0:
             return {
                 "codigo": 404,
-                "mensaje": "Carrera no encontrada"
+                "mensaje": "No existe esta carrera"
             }
 
         return {
@@ -153,19 +145,19 @@ class CarreraService:
             "mensaje": "Estatus de carrera actualizado correctamente"
         }
 
-    async def eliminar_carrera(self, idCarrera: str):
+    def eliminar_carrera(self, idCarrera: str):
         if not ObjectId.is_valid(idCarrera):
             return {
                 "codigo": 400,
                 "mensaje": "ID de carrera no válido"
             }
 
-        resultado = await self.collection.delete_one({"_id": ObjectId(idCarrera)})
+        resultado = self.collection.delete_one({"_id": ObjectId(idCarrera)})
 
         if resultado.deleted_count == 0:
             return {
                 "codigo": 404,
-                "mensaje": "Carrera no encontrada"
+                "mensaje": "No existe esta carrera"
             }
 
         return {

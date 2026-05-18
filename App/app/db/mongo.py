@@ -1,11 +1,15 @@
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import MongoClient
 
 MONGO_URI = "mongodb://localhost:27017"
 DB_NAME = "gestion_eventos_db"
 
-client = AsyncIOMotorClient(MONGO_URI)
+client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 
 
 def get_database():
+    return db
+
+
+def get_db():
     return db

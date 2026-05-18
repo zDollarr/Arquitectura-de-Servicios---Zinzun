@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Optional
 
 from bson import ObjectId
 from fastapi import HTTPException, status
-from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.models.grupo_model import (
     GrupoCreate,
@@ -30,14 +29,16 @@ def _validate_object_id(value: str, field_name: str) -> ObjectId:
     return ObjectId(value)
 
 
-async def _ensure_carrera_exists(db: AsyncIOMotorDatabase, id_carrera: str) -> ObjectId:
+def _ensure_carrera_exists(db, id_carrera: str) -> ObjectId:
     carrera_id = _validate_object_id(id_carrera, "idCarrera")
-    carrera = await db[CARRERAS_COLLECTION].find_one({"_id": carrera_id})
+
+    carrera = db[CARRERAS_COLLECTION].find_one({"_id": carrera_id})
     if not carrera:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="La carrera indicada no existe.",
         )
+
     return carrera_id
 
 
@@ -56,9 +57,9 @@ def _serialize_grupo(document: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-async def create_grupo(db: AsyncIOMotorDatabase, payload: GrupoCreate) -> GrupoCreateResponse:
+def create_grupo(db, payload: GrupoCreate) -> GrupoCreateResponse:
     grupos = db[GRUPOS_COLLECTION]
-    carrera_id = await _ensure_carrera_exists(db, payload.idCarrera)
+    carrera_id = _ensure_carrera_exists(db, payload.idCarrera)
 
     document = {
         "nombre": payload.nombre.strip(),
@@ -68,7 +69,7 @@ async def create_grupo(db: AsyncIOMotorDatabase, payload: GrupoCreate) -> GrupoC
         "fechaCreacion": datetime.now(timezone.utc),
     }
 
-    result = await grupos.insert_one(document)
+    result = grupos.insert_one(document)
 
     return GrupoCreateResponse(
         codigo=status.HTTP_201_CREATED,
@@ -77,11 +78,11 @@ async def create_grupo(db: AsyncIOMotorDatabase, payload: GrupoCreate) -> GrupoC
     )
 
 
-async def update_grupo(db: AsyncIOMotorDatabase, id_grupo: str, payload: GrupoUpdate) -> OperacionResponse:
+def update_grupo(db, id_grupo: str, payload: GrupoUpdate) -> OperacionResponse:
     grupos = db[GRUPOS_COLLECTION]
     grupo_id = _validate_object_id(id_grupo, "idGrupo")
 
-    existing = await grupos.find_one({"_id": grupo_id})
+    existing = grupos.find_one({"_id": grupo_id})
     if not existing:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -89,14 +90,22 @@ async def update_grupo(db: AsyncIOMotorDatabase, id_grupo: str, payload: GrupoUp
         )
 
     updates: Dict[str, Any] = {}
-    payload_dict = payload.model_dump(exclude_none=True) if hasattr(payload, "model_dump") else payload.dict(exclude_none=True)
+
+    payload_dict = (
+        payload.model_dump(exclude_none=True)
+        if hasattr(payload, "model_dump")
+        else payload.dict(exclude_none=True)
+    )
 
     if "nombre" in payload_dict:
         updates["nombre"] = payload_dict["nombre"].strip()
+
     if "idCarrera" in payload_dict:
-        updates["idCarrera"] = await _ensure_carrera_exists(db, payload_dict["idCarrera"])
+        updates["idCarrera"] = _ensure_carrera_exists(db, payload_dict["idCarrera"])
+
     if "semestre" in payload_dict:
         updates["semestre"] = payload_dict["semestre"]
+
     if "estatus" in payload_dict:
         updates["estatus"] = payload_dict["estatus"]
 
@@ -106,33 +115,52 @@ async def update_grupo(db: AsyncIOMotorDatabase, id_grupo: str, payload: GrupoUp
             mensaje="No se enviaron cambios para actualizar el grupo.",
         )
 
-    await grupos.update_one({"_id": grupo_id}, {"$set": updates})
+    grupos.update_one({"_id": grupo_id}, {"$set": updates})
 
-    return OperacionResponse(codigo=status.HTTP_200_OK, mensaje="Grupo actualizado correctamente.")
+    return OperacionResponse(
+        codigo=status.HTTP_200_OK,
+        mensaje="Grupo actualizado correctamente."
+    )
 
 
-async def delete_grupo(db: AsyncIOMotorDatabase, id_grupo: str) -> None:
+def delete_grupo(db, id_grupo: str) -> OperacionResponse:
     grupos = db[GRUPOS_COLLECTION]
     grupo_id = _validate_object_id(id_grupo, "idGrupo")
 
-    result = await grupos.delete_one({"_id": grupo_id})
+    result = grupos.delete_one({"_id": grupo_id})
+
     if result.deleted_count == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="El grupo indicado no existe.",
         )
 
-
-async def activate_grupo(db: AsyncIOMotorDatabase, id_grupo: str) -> OperacionResponse:
-    return await _update_grupo_status(db, id_grupo, True, "Grupo activado correctamente.")
-
-
-async def deactivate_grupo(db: AsyncIOMotorDatabase, id_grupo: str) -> OperacionResponse:
-    return await _update_grupo_status(db, id_grupo, False, "Grupo desactivado correctamente.")
+    return OperacionResponse(
+        codigo=status.HTTP_200_OK,
+        mensaje="Grupo eliminado correctamente."
+    )
 
 
-async def _update_grupo_status(
-    db: AsyncIOMotorDatabase,
+def activate_grupo(db, id_grupo: str) -> OperacionResponse:
+    return _update_grupo_status(
+        db,
+        id_grupo,
+        True,
+        "Grupo activado correctamente."
+    )
+
+
+def deactivate_grupo(db, id_grupo: str) -> OperacionResponse:
+    return _update_grupo_status(
+        db,
+        id_grupo,
+        False,
+        "Grupo desactivado correctamente."
+    )
+
+
+def _update_grupo_status(
+    db,
     id_grupo: str,
     new_status: bool,
     success_message: str,
@@ -140,21 +168,29 @@ async def _update_grupo_status(
     grupos = db[GRUPOS_COLLECTION]
     grupo_id = _validate_object_id(id_grupo, "idGrupo")
 
-    result = await grupos.update_one({"_id": grupo_id}, {"$set": {"estatus": new_status}})
+    result = grupos.update_one(
+        {"_id": grupo_id},
+        {"$set": {"estatus": new_status}}
+    )
+
     if result.matched_count == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="El grupo indicado no existe.",
         )
 
-    return OperacionResponse(codigo=status.HTTP_200_OK, mensaje=success_message)
+    return OperacionResponse(
+        codigo=status.HTTP_200_OK,
+        mensaje=success_message
+    )
 
 
-async def get_grupo_by_id(db: AsyncIOMotorDatabase, id_grupo: str) -> GrupoOut:
+def get_grupo_by_id(db, id_grupo: str) -> GrupoOut:
     grupos = db[GRUPOS_COLLECTION]
     grupo_id = _validate_object_id(id_grupo, "idGrupo")
 
-    grupo = await grupos.find_one({"_id": grupo_id})
+    grupo = grupos.find_one({"_id": grupo_id})
+
     if not grupo:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -164,8 +200,8 @@ async def get_grupo_by_id(db: AsyncIOMotorDatabase, id_grupo: str) -> GrupoOut:
     return GrupoOut(**_serialize_grupo(grupo))
 
 
-async def list_grupos(
-    db: AsyncIOMotorDatabase,
+def list_grupos(
+    db,
     id_carrera: Optional[str] = None,
     semestre: Optional[int] = None,
 ) -> GruposListResponse:
@@ -174,13 +210,18 @@ async def list_grupos(
 
     if id_carrera is not None:
         query["idCarrera"] = _validate_object_id(id_carrera, "idCarrera")
+
     if semestre is not None:
         query["semestre"] = semestre
 
-    documents = await grupos.find(query).sort("fechaCreacion", -1).to_list(length=None)
-    serialized: List[GrupoOut] = [GrupoOut(**_serialize_grupo(doc)) for doc in documents]
+    documents = list(grupos.find(query).sort("fechaCreacion", -1))
+
+    serialized: List[GrupoOut] = [
+        GrupoOut(**_serialize_grupo(doc)) for doc in documents
+    ]
 
     mensaje = "Consulta de grupos realizada correctamente."
+
     if id_carrera is not None and semestre is None:
         mensaje = "Consulta de grupos filtrados por carrera realizada correctamente."
     elif semestre is not None and id_carrera is None:
@@ -188,4 +229,8 @@ async def list_grupos(
     elif query:
         mensaje = "Consulta de grupos filtrados realizada correctamente."
 
-    return GruposListResponse(codigo=status.HTTP_200_OK, mensaje=mensaje, grupos=serialized)
+    return GruposListResponse(
+        codigo=status.HTTP_200_OK,
+        mensaje=mensaje,
+        grupos=serialized
+    )
