@@ -5,3 +5,6 @@ DB_NAME = "gestion_eventos_db"
 
 client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
+
+def get_db():
+    return db
