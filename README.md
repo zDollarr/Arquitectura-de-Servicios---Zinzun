@@ -1,6 +1,10 @@
-# Arquitectura de Servicios - Gestión de Eventos y Actividades
+# Arquitectura de Servicios
 
-Repositorio del proyecto académico de la materia Arquitectura de Servicios. El sistema tiene como propósito gestionar alumnos, carreras, grupos, eventos, actividades e inscripciones mediante una API REST y una base de datos documental.
+Proyecto académico desarrollado en equipo de 3 personas para la materia de Arquitectura de Servicios en el ITESZ. El sistema gestiona alumnos, carreras, grupos, eventos, actividades e inscripciones mediante una API REST construida con FastAPI y MongoDB.
+
+El desarrollo fue coordinado de forma colaborativa a través de GitHub, con responsabilidades documentadas por recurso y avances trazables mediante commits.
+
+---
 
 ## Integrantes
 
@@ -8,11 +12,9 @@ Repositorio del proyecto académico de la materia Arquitectura de Servicios. El 
 - Francisco Daniel Arciniega Robles
 - Angel Ramón Ramírez Mendoza
 
-## Descripción general
+---
 
-Este proyecto está orientado al desarrollo de una solución para la gestión de eventos y actividades dirigidas a alumnos. A partir del modelo de dominio definido, se documentaron los recursos principales del sistema y las operaciones REST correspondientes para su implementación.
-
-Los recursos contemplados en el sistema son los siguientes:
+## Recursos del sistema
 
 - Alumno
 - Carrera
@@ -21,66 +23,74 @@ Los recursos contemplados en el sistema son los siguientes:
 - Actividad
 - Inscripción
 
-## Objetivo del repositorio
-
-Este repositorio concentra los componentes principales del proyecto, organizados en carpetas para separar la documentación, la base de datos y el desarrollo de la aplicación. Su propósito es facilitar el trabajo colaborativo del equipo y mantener trazabilidad de avances mediante commits.
-
-## Tecnologías de desarrollo
-
-- Python
-- FastAPI
-- MongoDB
-- API REST
-
-## Contenido de las carpetas
-
-### Documentacion
-
-Contiene los documentos que definen el contexto del proyecto, entre ellos la definición general, el modelo de dominio, el diagrama de clases y el documento de definición de los servicios REST.
-
-### BD
-
-Contiene los elementos relacionados con la base de datos documental del proyecto, incluyendo:
-
-- Diagrama de la base de datos
-- Archivos JSON con datos de muestra
-- Restricciones de integridad y validaciones de esquemas
-- Vistas para simplificar consultas
-
-### App
-
-Contiene la estructura base y los componentes de desarrollo del backend de la aplicación, organizados en módulos para configuración, conexión a base de datos, modelos, rutas y servicios.
+---
 
 ## Responsables por recurso
 
-- Alumno: Francisco Daniel Arciniega Robles
-- Carrera: Angel Ramón Ramírez Mendoza
-- Grupo: Francisco Daniel Arciniega Robles
-- Evento: Fernando Santos Gómez
-- Actividad: Angel Ramón Ramírez Mendoza
-- Inscripción: Fernando Santos Gómez
+| Recurso | Responsable |
+|---|---|
+| Alumno | Francisco Daniel Arciniega Robles |
+| Carrera | Angel Ramón Ramírez Mendoza |
+| Grupo | Francisco Daniel Arciniega Robles |
+| Evento | Fernando Santos Gómez |
+| Actividad | Angel Ramón Ramírez Mendoza |
+| Inscripción | Fernando Santos Gómez |
 
-## Ejecución del backend
+---
 
-### 1. Ingresar a la carpeta de la aplicación
+## Tech Stack
+
+FastAPI · Python · MongoDB · REST API · Uvicorn
+
+---
+
+## Estructura del Repositorio
+
+```text
+Documentacion/   # Definición del proyecto, modelo de dominio, diagrama de clases y servicios REST
+BD/              # Diagrama de BD, datos de muestra JSON, restricciones y vistas
+App/             # Backend de la aplicación (FastAPI)
+```
+
+---
+
+## Requisitos previos
+
+- Python 3.10 o superior
+- MongoDB disponible (local o en la nube con MongoDB Atlas)
+- pip
+
+---
+
+## Variables de entorno
+
+Antes de ejecutar el proyecto, crea un archivo `.env` dentro de la carpeta `App/` con la URI de conexión a tu base de datos MongoDB:
+
+```env
+MONGO_URI=mongodb://localhost:27017
+DB_NAME=eventos_db
+```
+
+> Si usas MongoDB Atlas, reemplaza `MONGO_URI` con la cadena de conexión de tu cluster.
+
+---
+
+## Instalación y Ejecución
 
 ```bash
 cd App
-```
-
-### 2. Instalar dependencias
-
-```bash
 pip install -r requirements.txt
-```
-
-### 3. Ejecutar el servidor
-
-```bash
 uvicorn app.main:app --reload
 ```
 
-### 4. Acceder a la API
+### Acceso a la API
 
 - URL base: http://127.0.0.1:8000
-- Documentación interactiva: http://127.0.0.1:8000/docs
+- Documentación interactiva (Swagger): http://127.0.0.1:8000/docs
+- Documentación alternativa (ReDoc): http://127.0.0.1:8000/redoc
+
+---
+
+## Documentación del proyecto
+
+La carpeta `Documentacion/` contiene los documentos que definen el contexto del proyecto: definición general, modelo de dominio, diagrama de clases y especificación de los servicios REST con responsables asignados.
