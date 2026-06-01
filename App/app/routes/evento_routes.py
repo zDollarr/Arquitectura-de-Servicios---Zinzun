@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, Request
 from app.models.evento_model import EventoCreate, EventoUpdate
 from app.services.evento_service import (
     crear_evento_service,
@@ -7,30 +7,54 @@ from app.services.evento_service import (
     actualizar_evento_service,
     cancelar_evento_service
 )
+from app.utils.security import require_roles
+from app.core.rate_limit import limiter
+
 
 router = APIRouter(prefix="/eventos", tags=["Eventos"])
 
 
 @router.post("/")
-def crear_evento(datos: EventoCreate):
+@limiter.limit("10/minute")
+def crear_evento(
+    request: Request,
+    datos: EventoCreate,
+    user: dict = Depends(require_roles(["organizador"]))
+):
     return crear_evento_service(datos)
 
 
 @router.get("/")
-def consultar_eventos():
+@limiter.limit("30/minute")
+def consultar_eventos(request: Request):
     return consultar_eventos_service()
 
 
 @router.get("/{idEvento}")
-def consultar_evento_por_id(idEvento: str):
+@limiter.limit("30/minute")
+def consultar_evento_por_id(
+    request: Request,
+    idEvento: str
+):
     return consultar_evento_por_id_service(idEvento)
 
 
 @router.put("/{idEvento}")
-def actualizar_evento(idEvento: str, datos: EventoUpdate):
+@limiter.limit("10/minute")
+def actualizar_evento(
+    request: Request,
+    idEvento: str,
+    datos: EventoUpdate,
+    user: dict = Depends(require_roles(["organizador"]))
+):
     return actualizar_evento_service(idEvento, datos)
 
 
 @router.patch("/{idEvento}/cancelar")
-def cancelar_evento(idEvento: str):
+@limiter.limit("10/minute")
+def cancelar_evento(
+    request: Request,
+    idEvento: str,
+    user: dict = Depends(require_roles(["organizador"]))
+):
     return cancelar_evento_service(idEvento)

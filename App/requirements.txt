@@ -1,4 +1,5 @@
+slowapi
+python-jose[cryptography]
+passlib[bcrypt]
 fastapi
-uvicorn
 pymongo
-python-dotenv

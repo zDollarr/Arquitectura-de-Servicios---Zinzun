@@ -1,11 +1,11 @@
 from fastapi import HTTPException
 from bson import ObjectId
 from datetime import datetime
-from app.db.mongo import get_db
+from app.db.mongo import get_database
 
 
-def crear_evento_service(datos):
-    db = get_db()
+async def crear_evento_service(datos):
+    db = get_database()
     eventos_collection = db["eventos"]
 
     if datos.capacidadMaxima <= 0:
@@ -22,7 +22,7 @@ def crear_evento_service(datos):
         "fechaRegistro": datetime.now()
     }
 
-    resultado = eventos_collection.insert_one(nuevo_evento)
+    resultado = await eventos_collection.insert_one(nuevo_evento)
 
     return {
         "codigo": 201,
@@ -31,13 +31,13 @@ def crear_evento_service(datos):
     }
 
 
-def consultar_eventos_service():
-    db = get_db()
+async def consultar_eventos_service():
+    db = get_database()
     eventos_collection = db["eventos"]
     eventos_cursor = eventos_collection.find()
 
     eventos = []
-    for evento in eventos_cursor:
+    async for evento in eventos_cursor:
         eventos.append({
             "idEvento": str(evento["_id"]),
             "nombre": evento.get("nombre", ""),
@@ -57,14 +57,14 @@ def consultar_eventos_service():
     }
 
 
-def consultar_evento_por_id_service(idEvento: str):
-    db = get_db()
+async def consultar_evento_por_id_service(idEvento: str):
+    db = get_database()
     eventos_collection = db["eventos"]
 
     if not ObjectId.is_valid(idEvento):
         raise HTTPException(status_code=400, detail="Id de evento no válido")
 
-    evento = eventos_collection.find_one({"_id": ObjectId(idEvento)})
+    evento = await eventos_collection.find_one({"_id": ObjectId(idEvento)})
 
     if not evento:
         raise HTTPException(status_code=404, detail="Evento no encontrado")
@@ -82,14 +82,14 @@ def consultar_evento_por_id_service(idEvento: str):
     }
 
 
-def actualizar_evento_service(idEvento: str, datos):
-    db = get_db()
+async def actualizar_evento_service(idEvento: str, datos):
+    db = get_database()
     eventos_collection = db["eventos"]
 
     if not ObjectId.is_valid(idEvento):
         raise HTTPException(status_code=400, detail="Id de evento no válido")
 
-    evento_existente = eventos_collection.find_one({"_id": ObjectId(idEvento)})
+    evento_existente = await eventos_collection.find_one({"_id": ObjectId(idEvento)})
 
     if not evento_existente:
         raise HTTPException(status_code=404, detail="Evento no encontrado")
@@ -100,7 +100,7 @@ def actualizar_evento_service(idEvento: str, datos):
         raise HTTPException(status_code=400, detail="La capacidad maxima debe ser mayor a 0")
 
     if datos_actualizar:
-        eventos_collection.update_one(
+        await eventos_collection.update_one(
             {"_id": ObjectId(idEvento)},
             {"$set": datos_actualizar}
         )
@@ -111,19 +111,19 @@ def actualizar_evento_service(idEvento: str, datos):
     }
 
 
-def cancelar_evento_service(idEvento: str):
-    db = get_db()
+async def cancelar_evento_service(idEvento: str):
+    db = get_database()
     eventos_collection = db["eventos"]
 
     if not ObjectId.is_valid(idEvento):
         raise HTTPException(status_code=400, detail="Id de evento no válido")
 
-    evento_existente = eventos_collection.find_one({"_id": ObjectId(idEvento)})
+    evento_existente = await eventos_collection.find_one({"_id": ObjectId(idEvento)})
 
     if not evento_existente:
         raise HTTPException(status_code=404, detail="Evento no encontrado")
 
-    eventos_collection.update_one(
+    await eventos_collection.update_one(
         {"_id": ObjectId(idEvento)},
         {"$set": {"estatus": "cancelado"}}
     )

@@ -1,11 +1,11 @@
 from fastapi import HTTPException
 from bson import ObjectId
 from datetime import datetime
-from app.db.mongo import get_db
+from app.db.mongo import get_database
 
 
-def crear_inscripcion_service(datos):
-    db = get_db()
+async def crear_inscripcion_service(datos):
+    db = get_database()
     inscripciones_collection = db["inscripciones"]
     alumnos_collection = db["alumnos"]
     eventos_collection = db["eventos"]
@@ -16,11 +16,11 @@ def crear_inscripcion_service(datos):
     if not ObjectId.is_valid(datos.idEvento):
         raise HTTPException(status_code=400, detail="Id de evento no válido")
 
-    alumno_existente = alumnos_collection.find_one({"_id": ObjectId(datos.idAlumno)})
+    alumno_existente = await alumnos_collection.find_one({"_id": ObjectId(datos.idAlumno)})
     if not alumno_existente:
         raise HTTPException(status_code=404, detail="Alumno no encontrado")
 
-    evento_existente = eventos_collection.find_one({"_id": ObjectId(datos.idEvento)})
+    evento_existente = await eventos_collection.find_one({"_id": ObjectId(datos.idEvento)})
     if not evento_existente:
         raise HTTPException(status_code=404, detail="Evento no encontrado")
 
@@ -33,7 +33,7 @@ def crear_inscripcion_service(datos):
     if inscritos_actuales >= capacidad_maxima:
         raise HTTPException(status_code=400, detail="Evento lleno")
 
-    inscripcion_duplicada = inscripciones_collection.find_one({
+    inscripcion_duplicada = await inscripciones_collection.find_one({
         "idAlumno": ObjectId(datos.idAlumno),
         "idEvento": ObjectId(datos.idEvento)
     })
@@ -48,9 +48,9 @@ def crear_inscripcion_service(datos):
         "asistencia": False
     }
 
-    resultado = inscripciones_collection.insert_one(nueva_inscripcion)
+    resultado = await inscripciones_collection.insert_one(nueva_inscripcion)
 
-    eventos_collection.update_one(
+    await eventos_collection.update_one(
         {"_id": ObjectId(datos.idEvento)},
         {"$inc": {"inscritos": 1}}
     )
@@ -62,8 +62,8 @@ def crear_inscripcion_service(datos):
     }
 
 
-def consultar_inscripciones_service(idAlumno=None, idEvento=None):
-    db = get_db()
+async def consultar_inscripciones_service(idAlumno=None, idEvento=None):
+    db = get_database()
     inscripciones_collection = db["inscripciones"]
 
     filtro = {}
@@ -81,7 +81,7 @@ def consultar_inscripciones_service(idAlumno=None, idEvento=None):
     inscripciones_cursor = inscripciones_collection.find(filtro)
 
     inscripciones = []
-    for inscripcion in inscripciones_cursor:
+    async for inscripcion in inscripciones_cursor:
         inscripciones.append({
             "idInscripcion": str(inscripcion["_id"]),
             "idAlumno": str(inscripcion.get("idAlumno", "")),
@@ -97,14 +97,14 @@ def consultar_inscripciones_service(idAlumno=None, idEvento=None):
     }
 
 
-def consultar_inscripcion_por_id_service(idInscripcion: str):
-    db = get_db()
+async def consultar_inscripcion_por_id_service(idInscripcion: str):
+    db = get_database()
     inscripciones_collection = db["inscripciones"]
 
     if not ObjectId.is_valid(idInscripcion):
         raise HTTPException(status_code=400, detail="Id de inscripción no válido")
 
-    inscripcion = inscripciones_collection.find_one({"_id": ObjectId(idInscripcion)})
+    inscripcion = await inscripciones_collection.find_one({"_id": ObjectId(idInscripcion)})
 
     if not inscripcion:
         raise HTTPException(status_code=404, detail="Inscripción no encontrada")
@@ -118,25 +118,25 @@ def consultar_inscripcion_por_id_service(idInscripcion: str):
     }
 
 
-def cancelar_inscripcion_service(idInscripcion: str):
-    db = get_db()
+async def cancelar_inscripcion_service(idInscripcion: str):
+    db = get_database()
     inscripciones_collection = db["inscripciones"]
     eventos_collection = db["eventos"]
 
     if not ObjectId.is_valid(idInscripcion):
         raise HTTPException(status_code=400, detail="Id de inscripción no válido")
 
-    inscripcion = inscripciones_collection.find_one({"_id": ObjectId(idInscripcion)})
+    inscripcion = await inscripciones_collection.find_one({"_id": ObjectId(idInscripcion)})
 
     if not inscripcion:
         raise HTTPException(status_code=404, detail="Inscripción no encontrada")
 
-    eventos_collection.update_one(
+    await eventos_collection.update_one(
         {"_id": inscripcion["idEvento"]},
         {"$inc": {"inscritos": -1}}
     )
 
-    inscripciones_collection.delete_one({"_id": ObjectId(idInscripcion)})
+    await inscripciones_collection.delete_one({"_id": ObjectId(idInscripcion)})
 
     return {
         "codigo": 200,

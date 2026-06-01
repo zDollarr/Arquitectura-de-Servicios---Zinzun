@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, Query, Request, status
 
+from app.core.rate_limit import limiter
 from app.db.mongo import get_database
 from app.models.alumno_model import (
     AlumnoCreate,
@@ -23,6 +24,7 @@ from app.services.alumno_service import (
     get_alumno_by_id,
     list_alumnos,
 )
+from app.utils.security import require_roles
 
 
 router = APIRouter(prefix="/alumnos", tags=["Alumnos"])
@@ -32,12 +34,15 @@ router = APIRouter(prefix="/alumnos", tags=["Alumnos"])
 def crear_alumno(
     payload: AlumnoCreate,
     db=Depends(get_database),
+    user: dict = Depends(require_roles(["admin"]))
 ) -> AlumnoCreateResponse:
     return create_alumno(db, payload)
 
 
 @router.post("/login", response_model=AlumnoLoginResponse, summary="Autenticar alumno")
+@limiter.limit("5/minute")
 def login_alumno(
+    request: Request,
     payload: AlumnoLogin,
     db=Depends(get_database),
 ) -> AlumnoLoginResponse:
@@ -50,6 +55,7 @@ def consultar_alumnos(
     idCarrera: Optional[str] = Query(default=None, min_length=24, max_length=24),
     idGrupo: Optional[str] = Query(default=None, min_length=24, max_length=24),
     db=Depends(get_database),
+    user: dict = Depends(require_roles(["admin"]))
 ) -> AlumnosListResponse:
     return list_alumnos(db, estatus=estatus, id_carrera=idCarrera, id_grupo=idGrupo)
 
@@ -58,6 +64,7 @@ def consultar_alumnos(
 def consultar_alumno_por_id(
     idAlumno: str,
     db=Depends(get_database),
+    user: dict = Depends(require_roles(["admin"]))
 ) -> AlumnoOut:
     return get_alumno_by_id(db, idAlumno)
 
@@ -66,6 +73,7 @@ def consultar_alumno_por_id(
 def activar_alumno(
     idAlumno: str,
     db=Depends(get_database),
+    user: dict = Depends(require_roles(["admin"]))
 ) -> OperacionResponse:
     return activate_alumno(db, idAlumno)
 
@@ -74,6 +82,7 @@ def activar_alumno(
 def desactivar_alumno(
     idAlumno: str,
     db=Depends(get_database),
+    user: dict = Depends(require_roles(["admin"]))
 ) -> OperacionResponse:
     return deactivate_alumno(db, idAlumno)
 
@@ -82,5 +91,6 @@ def desactivar_alumno(
 def eliminar_alumno(
     idAlumno: str,
     db=Depends(get_database),
+    user: dict = Depends(require_roles(["admin"]))
 ) -> OperacionResponse:
     return delete_alumno(db, idAlumno)
