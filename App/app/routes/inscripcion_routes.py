@@ -10,7 +10,6 @@ from app.services.inscripcion_service import (
 from app.utils.security import require_roles
 from app.core.rate_limit import limiter
 
-
 router = APIRouter(prefix="/inscripciones", tags=["Inscripciones"])
 
 

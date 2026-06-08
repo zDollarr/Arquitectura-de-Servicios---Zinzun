@@ -10,7 +10,6 @@ from app.services.evento_service import (
 from app.utils.security import require_roles
 from app.core.rate_limit import limiter
 
-
 router = APIRouter(prefix="/eventos", tags=["Eventos"])
 
 
@@ -19,7 +18,7 @@ router = APIRouter(prefix="/eventos", tags=["Eventos"])
 def crear_evento(
     request: Request,
     datos: EventoCreate,
-    user: dict = Depends(require_roles(["organizador"]))
+    user: dict = Depends(require_roles(["organizador", "admin"]))
 ):
     return crear_evento_service(datos)
 
@@ -45,7 +44,7 @@ def actualizar_evento(
     request: Request,
     idEvento: str,
     datos: EventoUpdate,
-    user: dict = Depends(require_roles(["organizador"]))
+    user: dict = Depends(require_roles(["organizador", "admin"]))
 ):
     return actualizar_evento_service(idEvento, datos)
 
@@ -55,6 +54,6 @@ def actualizar_evento(
 def cancelar_evento(
     request: Request,
     idEvento: str,
-    user: dict = Depends(require_roles(["organizador"]))
+    user: dict = Depends(require_roles(["organizador", "admin"]))
 ):
     return cancelar_evento_service(idEvento)
